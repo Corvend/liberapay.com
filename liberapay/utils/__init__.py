@@ -116,6 +116,29 @@ def get_participant(
 
     return participant
 
+def get_participant_donation_form_settings(
+    state, restrict=True, allow_member=False, redirect_canon=True, redirect_stub=True,
+):
+    """Get a participant's donation form settings from the ID or username in the request path.
+
+    Args:
+        restrict (bool): the page is private, restrict access to it
+        allow_member (bool): allow members of a team to access this page
+        redirect_canon (bool): allow redirecting the request to the canonical URL
+        redirect_stub (bool): allow redirecting the request to the pledge page
+
+    Returns a `ParticipantDonationFormSettings` or raises a `Response`.
+
+    """
+    request = state['request']
+    response = state['response']
+    user = state['user']
+    slug = request.path['username']
+    _ = state['_']
+
+    #TODO: Implement this
+
+    return None
 
 def get_community(state, restrict=False):
     request, response = state['request'], state['response']

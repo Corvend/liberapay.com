@@ -1,0 +1,56 @@
+from liberapay.utils import form_post_success, get_participant, get_participant_donation_form_settings
+
+[---]
+participant = get_participant(state, restrict=True, allow_member=True)
+participant_donation_form_settings = get_participant_donation_form_settings(state, restrict=True, allow_member=True)
+
+if request.method == "POST":
+    goal = request.body["goal"]
+    if goal == "null":
+        goal = None
+    elif goal == "custom":
+        goal = request.body["goal_custom"]
+        goal = locale.parse_money_amount(goal, participant.main_currency)
+        if not (goal > 0 or participant.is_person and goal.amount in (0, -1)):
+            raise response.invalid_input(goal, 'goal_custom', 'body')
+    else:
+        goal = Money(request.body.get_int("goal"), participant.main_currency).round_down()
+        if not (goal > 0 or participant.is_person and goal.amount in (0, -1)):
+            raise response.invalid_input(goal, 'goal', 'body')
+    participant.update_goal(goal)
+    form_post_success(state)
+
+title = participant.username
+subhead = _("Donation Form")
+
+[---] text/html
+% extends "templates/layouts/profile-edit.html"
+
+% block form
+
+<form action="" method="POST" class="goal">
+
+    <h4 class="no-margin-top">{{ _("Donation limits") }}</h4>
+
+    <label class="with-input-group-sm">
+        <p>{{ _("Maximum donation amount to receive per week from a single donor") }}</p>
+        <div><div class="input-group">
+            % set goal_currency = participant.main_currency
+            <div class="input-group-addon">{{ locale.currency_symbols.get(goal_currency, goal_currency) }}</div>
+            <input type="tel" inputmode="decimal" name="goal_custom" id="goal-custom"
+                   class="amount form-control input-sm"
+                   value="{{ locale.format_money(participant.goal, format='amount_only', trailing_zeroes=False)
+                             if participant.goal and participant.goal > 0 else '' }}" />
+            <div class="input-group-addon">{{ _("per week") }}</div>
+        </div></div>
+    </label><br>
+
+    <label>
+        <input type="checkbox" name="no-limit" id="no-limit" value=false/>
+        {{ _("Testing") }}
+    </label><br>
+
+    <button class="save btn btn-success">{{ _("Save") }}</button>
+</form>
+
+% endblock
